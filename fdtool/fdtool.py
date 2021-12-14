@@ -28,13 +28,13 @@ from modules import *
 from string import ascii_lowercase
 from config import MAX_K_LEVEL
 
-def fdtool(input_file, output_file=None, suppress_output=False):
+def fdtool(input_file, output_file=None, suppress_save=False, verbose = True):
 
     # Define filePath
     filePath = input_file
 
     # Print reading file
-    print "\n" + "Reading file: \n" + str(filePath) + "\n"; sys.stdout.flush();
+    if verbose: print "\n" + "Reading file: \n" + str(filePath) + "\n"; sys.stdout.flush();
     # Define file extension from path
     fileExtension = ntpath.basename(filePath).split('.')[-1]
 
@@ -54,7 +54,7 @@ def fdtool(input_file, output_file=None, suppress_output=False):
             sepType = dialect.delimiter
 
             if sepType not in {",", "|", ";", ":", "~"}:
-                print "Invalid delimiter"
+                if verbose: print "Invalid delimiter"
                 sys.stdout.flush()
                 return;
 
@@ -81,7 +81,7 @@ def fdtool(input_file, output_file=None, suppress_output=False):
     start_time = time.time()
     
     # Opens a file with the specified name
-    if(not(suppress_output)): 
+    if(not(suppress_save)): 
         file = open(output_file, 'w+')
 
         # Add name of file , row count, columns to info string
@@ -89,7 +89,7 @@ def fdtool(input_file, output_file=None, suppress_output=False):
             + str(", ".join(list(df.head(0)))) + "\n\n" + "Functional Dependencies: \n"))
 
     # Print line
-    print("Functional Dependencies: "); sys.stdout.flush();
+    if verbose: print("Functional Dependencies: "); sys.stdout.flush();
     # Define header; Initialize k; 
     U = list(df.head(0)); k = 0;
     
@@ -97,7 +97,7 @@ def fdtool(input_file, output_file=None, suppress_output=False):
         # Create dictionary to convert column names into alphabetical characters
         Alpha_Dict = {U[i]: ascii_lowercase.upper()[i] for i in range(len(U))}
     except IndexError:
-        print "Table exceeds max column count"
+        if verbose: print "Table exceeds max column count"
         sys.stdout.flush()
         return;
     
@@ -148,9 +148,9 @@ def fdtool(input_file, output_file=None, suppress_output=False):
             # Stores the FD into output dictionary
             FD_Dict[frozenset({FunctionalDependency[0]})] = set({FunctionalDependency[1]})
             # Print FD String
-            print(String); sys.stdout.flush();
+            if verbose: print(String); sys.stdout.flush();
             # Write string to TXT file
-            if(not(suppress_output)): file.write(String + "\n")
+            if(not(suppress_save)): file.write(String + "\n")
         
         # Break while loop if cardinality of C_k is 0
         if not len(C_k) > 0: break;
@@ -158,20 +158,20 @@ def fdtool(input_file, output_file=None, suppress_output=False):
         if k is not None and MAX_K_LEVEL ==k: break;
 
     # Print equivalences
-    if(not(suppress_output)): file.write("\n" + "Equivalences: " + "\n")
-    print "\n" + "Equivalences: "; sys.stdout.flush();
+    if(not(suppress_save)): file.write("\n" + "Equivalences: " + "\n")
+    if verbose: print "\n" + "Equivalences: "; sys.stdout.flush();
     # Iterate through equivalences returned
     for Equivalence in E_Set:
         # Create string for functional dependency
         String = "{" + ", ".join(Equivalence[0]) + "} <-> {" + ", ".join(Equivalence[1]) + "}"
         # Print equivalence string
-        print(String); sys.stdout.flush();
+        if verbose: print(String); sys.stdout.flush();
         # Write string to TXT file
-        if(not(suppress_output)): file.write(String + "\n")
+        if(not(suppress_save)): file.write(String + "\n")
 
     # Print out keys 
-    if(not(suppress_output)): file.write("\n" + "Keys: " + "\n")
-    print "\n" + "Keys: "; sys.stdout.flush();
+    if(not(suppress_save)): file.write("\n" + "Keys: " + "\n")
+    if verbose: print "\n" + "Keys: "; sys.stdout.flush();
     # Get string of column names sorted to alphabetical characters
     SortedAlphaString = "".join(sorted([Alpha_Dict[item] for item in Alpha_Dict]))
     # Run required inputs through keyList module to determine keys with
@@ -179,9 +179,9 @@ def fdtool(input_file, output_file=None, suppress_output=False):
     # Iterate through keys returned
     for key in keyList:
         # Write keys to file
-        if(not(suppress_output)): file.write(str(key) + "\n")
+        if(not(suppress_save)): file.write(str(key) + "\n")
         # Print keys
-        print str(key); sys.stdout.flush();
+        if verbose: print str(key); sys.stdout.flush();
     
     # Create string to give user info of script
     checkInfoString = str("\n" + "Time (s): " + str(round(time.time() - start_time, 4)) + "\n"
@@ -190,11 +190,11 @@ def fdtool(input_file, output_file=None, suppress_output=False):
             "Number of FDs checked: " + str(GetFDs.CardOfPartition.calls))
     
     # Write info at bottom
-    if(not(suppress_output)): file.write(checkInfoString)
+    if(not(suppress_save)): file.write(checkInfoString)
     #Print elapsed time
-    print(checkInfoString); sys.stdout.flush();
+    if verbose: print(checkInfoString); sys.stdout.flush();
     # Close file
-    if(not(suppress_output)): file.close()
+    if(not(suppress_save)): file.close()
     
     return FD_Dict
 
@@ -202,7 +202,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('input', type=str, help='input')
     parser.add_argument('-o', '--output', type=str, help='output')
-    parser.add_argument('-s', '--suppress-output', help='supresses the file output', action='store_true')
+    parser.add_argument('-s', '--suppress-save', help='supresses the file output', action='store_true')
     args = parser.parse_args()
 
     filePath = args.input
@@ -214,7 +214,7 @@ def main():
     
     fdtool(input_file = filePath, 
             output_file = output_name, 
-            suppress_output=args.suppress_output)
+            suppress_save=args.suppress_save)
 
 if __name__=="__main__":
     main()
