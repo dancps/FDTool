@@ -28,7 +28,7 @@ from modules import *
 from string import ascii_lowercase
 from config import MAX_K_LEVEL
 
-def fdtool(input_file, output_file, suppress_output=False):
+def fdtool(input_file, output_file=None, suppress_output=False):
 
     # Define filePath
     filePath = input_file
@@ -112,6 +112,7 @@ def fdtool(input_file, output_file, suppress_output=False):
     # Create counter for number of Equivalences and FDs; initialize list to store FDs; list to store equivalences;
     Counter=[0,0]; FD_Store = []; E_Set = [];
 
+    FD_Dict = {}
     while True:
         
         # Increment k; initialize C_km1
@@ -144,6 +145,8 @@ def fdtool(input_file, output_file, suppress_output=False):
             FD_Store.append(["".join(sorted([Alpha_Dict[i] for i in FunctionalDependency[0]])), Alpha_Dict[FunctionalDependency[1]]]);
             # Create string for functional dependency
             String = "{" + ", ".join(FunctionalDependency[0]) + "} -> {" + str(FunctionalDependency[1]) + "}"
+            # Stores the FD into output dictionary
+            FD_Dict[frozenset({FunctionalDependency[0]})] = set({FunctionalDependency[1]})
             # Print FD String
             print(String); sys.stdout.flush();
             # Write string to TXT file
@@ -192,6 +195,8 @@ def fdtool(input_file, output_file, suppress_output=False):
     print(checkInfoString); sys.stdout.flush();
     # Close file
     if(not(suppress_output)): file.close()
+    
+    return FD_Dict
 
 def main():
     parser = argparse.ArgumentParser()
