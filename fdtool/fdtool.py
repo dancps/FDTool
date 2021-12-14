@@ -28,10 +28,10 @@ from modules import *
 from string import ascii_lowercase
 from config import MAX_K_LEVEL
 
-def main():
+def fdtool(input_file,output_file):
 
     # Define filePath
-    filePath = sys.argv[1]
+    filePath = input_file
 
     # Print reading file
     print "\n" + "Reading file: \n" + str(filePath) + "\n"; sys.stdout.flush();
@@ -80,10 +80,9 @@ def main():
     # Define start time
     start_time = time.time()
     
-    # Create default name for outFile if one is not chosen on command
-    if len(sys.argv) > 2: file  = open(sys.argv[2], 'w+')
-    else: file = open(str(ntpath.basename(filePath)).split('.')[0] + '.FD_Info.txt', 'w+')
-    
+    # Opens a file with the specified name
+    file = open(output_file, 'w+')
+
     # Add name of file , row count, columns to info string
     file.write(str("Table : " + str(ntpath.basename(filePath)).split('.')[0] + "\n" + "Columns : " 
         + str(", ".join(list(df.head(0)))) + "\n\n" + "Functional Dependencies: \n"))
@@ -193,4 +192,14 @@ def main():
     # Close file
     file.close()
 
+def main():
+    filePath = sys.argv[1]
+    if(len(sys.argv)>2):
+        output_name = sys.argv[2]
+    else:
+        output_name = str(ntpath.basename(filePath)).split('.')[0] + '.FD_Info.txt'
+    
+    fdtool(input_file = filePath, output_file = output_name)
 
+if __name__=="__main__":
+    main()
