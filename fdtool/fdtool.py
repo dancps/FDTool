@@ -146,7 +146,10 @@ def fdtool(input_file, output_file=None, suppress_save=False, verbose = True):
             # Create string for functional dependency
             String = "{" + ", ".join(FunctionalDependency[0]) + "} -> {" + str(FunctionalDependency[1]) + "}"
             # Stores the FD into output dictionary
-            FD_Dict[frozenset({FunctionalDependency[0]})] = set({FunctionalDependency[1]})
+            if frozenset(FunctionalDependency[0]) in FD_Dict:
+                FD_Dict[frozenset(FunctionalDependency[0])] = set.union(FD_Dict[frozenset(FunctionalDependency[0])],{FunctionalDependency[1]})
+            else:
+                FD_Dict[frozenset(FunctionalDependency[0])] = set({FunctionalDependency[1]})
             # Print FD String
             if verbose: print(String); sys.stdout.flush();
             # Write string to TXT file
