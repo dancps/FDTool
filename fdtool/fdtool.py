@@ -184,9 +184,9 @@ def fdtool(input_file, output_file=None, suppress_save=False, verbose = True, de
     # Get string of column names sorted to alphabetical characters
     SortedAlphaString = "".join(sorted([Alpha_Dict[item] for item in Alpha_Dict]))
     # Run required inputs through keyList module to determine keys with
-    keyList = keyRun.f(U, SortedAlphaString, FD_Store);
+    keyList, keyList_str = keyRun.f(U, SortedAlphaString, FD_Store);
     # Iterate through keys returned
-    for key in keyList:
+    for key in keyList_str:
         # Write keys to file
         if(not(suppress_save)): file.write(str(key) + "\n")
         # Print keys
