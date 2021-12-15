@@ -28,7 +28,9 @@ from modules import *
 from string import ascii_lowercase
 from config import MAX_K_LEVEL
 
-def fdtool(input_file, output_file=None, suppress_save=False, verbose = True):
+def fdtool(input_file, output_file=None, suppress_save=False, verbose = True, debug = False):
+
+    if debug: verbose = True
 
     # Define filePath
     filePath = input_file
@@ -152,6 +154,10 @@ def fdtool(input_file, output_file=None, suppress_save=False, verbose = True):
                 FD_Dict[frozenset(FunctionalDependency[0])] = set({FunctionalDependency[1]})
             # Print FD String
             if verbose: print(String); sys.stdout.flush();
+            if debug:
+                print ' FD = ',FunctionalDependency,type(FunctionalDependency)
+                print '  FD[0] = ',FunctionalDependency[0],type(FunctionalDependency[0])
+                print '  FD[1] = ',FunctionalDependency[1],type(FunctionalDependency[1])
             # Write string to TXT file
             if(not(suppress_save)): file.write(String + "\n")
         
@@ -199,13 +205,15 @@ def fdtool(input_file, output_file=None, suppress_save=False, verbose = True):
     # Close file
     if(not(suppress_save)): file.close()
     
-    return FD_Dict
+    return FD_Dict, keyList
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('input', type=str, help='input')
     parser.add_argument('-o', '--output', type=str, help='output')
     parser.add_argument('-s', '--suppress-save', help='supresses the file output', action='store_true')
+    parser.add_argument('-d', '--debug', help='uses for debbuging code', action='store_true')
+    parser.add_argument('-q', '--quiet', help='low verbosity output', action='store_true')
     args = parser.parse_args()
 
     filePath = args.input
@@ -217,7 +225,9 @@ def main():
     
     fdtool(input_file = filePath, 
             output_file = output_name, 
-            suppress_save=args.suppress_save)
+            suppress_save=args.suppress_save,
+            debug=args.debug,
+            verbose=not(args.quiet))
 
 if __name__=="__main__":
     main()
