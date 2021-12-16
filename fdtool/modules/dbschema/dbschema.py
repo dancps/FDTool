@@ -20,8 +20,8 @@
 import sys,re,string,math;
 from itertools import *
 
-lowercase = string.lowercase + u"ßäöüçáéíóúàèìòùãẽĩõũâêîôûëï";
-uppercase = string.uppercase + u"ÄÖÜÇÁÉÍÓÚÀÈÌÒÙÃẼĨÕŨÂÊÎÔÛËÏ"
+lowercase = string.ascii_lowercase + "ßäöüçáéíóúàèìòùãẽĩõũâêîôûëï";
+uppercase = string.ascii_uppercase + "ÄÖÜÇÁÉÍÓÚÀÈÌÒÙÃẼĨÕŨÂÊÎÔÛËÏ"
 letters = lowercase + uppercase;
 
 def upcSplit(s):
@@ -37,7 +37,7 @@ def upcSplit(s):
   return attrs;
 
 def unionUpcSplit(s):
-  return map(set,chain(*map(upcSplit,s)));
+  return list(map(set,chain(*list(map(upcSplit,s)))));
 
 sep = re.compile("[ ]*[/, \r\n][ ]*");
 intdepsep = re.compile(";");
@@ -48,7 +48,7 @@ global upcsplit; upcsplit = True; # split on upcase
 def ScanAttr( attrsastxt ):
   findattr = attrsastxt=="";
   if upcsplit:
-    attrs = set(chain(*map(upcSplit,allsep.split(attrsastxt))));
+    attrs = set(chain(*list(map(upcSplit,allsep.split(attrsastxt)))));
     for a in attrs:
       if len(a)==0: raise NameError("empty string instead of attribute")
       if a[0] not in uppercase: raise NameError("attribute does not start with uppercase letters: "+a)
@@ -64,8 +64,8 @@ def ScanAbh( abhhastxt ):
     except ValueError: raise ValueError("split by '->' did not succeed for rules: '%s' ('%s')" % (abhtx,abhhastxt) );
     li = frozenset(intdepsep.split(li)); re = set(intdepsep.split(re));
     if upcsplit: 
-      li = frozenset(chain(*map(upcSplit, li )));
-      re = set(chain(*map(upcSplit, re )));
+      li = frozenset(chain(*list(map(upcSplit, li ))));
+      re = set(chain(*list(map(upcSplit, re ))));
     if li in abhh:
       abhh[li] = abhh[li].union( re );
     else:
@@ -80,7 +80,7 @@ global sort; shouldsort = True;
 def attr2str(attrs,attrsep='' if upcsplit else ';'):
   attrs = list(attrs);
   if shouldsort: attrs.sort();
-  return string.join(attrs,attrsep);
+  return attrsep.join(attrs);
 
 def abh2str(li,re):
   attrsep = '' if upcsplit else ';'
@@ -108,12 +108,12 @@ def closure(attrs,abh):
     haschanged = True;
     while haschanged:
       haschanged = False;
-      for (li,re) in abh.items():
-	if li <= attrs and not re <= attrs: 
-	  attrs = attrs.union(re);
-	  haschanged = True;
-  except Exception, ex:
-    print >>sys.stderr, "error in dependency: %s->%s" % (li,re)
+      for (li,re) in list(abh.items()):
+        if li <= attrs and not re <= attrs: 
+          attrs = attrs.union(re);
+          haschanged = True;
+  except Exception as ex:
+    print("error in dependency: %s->%s" % (li,re), file=sys.stderr)
     raise ex;
   return attrs;
 
@@ -122,7 +122,7 @@ def shuffle(lis,num):   # permutates lis according to num
   newlis=[]; positions=1;
   while positions <= len(lis):	  
     item = lis[len(lis)-positions]; 
-    newlis.insert( num % positions, item );
+    newlis.insert( int(num) % int(positions), item );
     num = num / positions;
     positions+=1;
   return newlis;
@@ -144,7 +144,7 @@ def mincoverage(abh,scramble=0,hints={}):
   # finally shuffle all dependency bundles according to scramble
 
   traverse = [];
-  for key in abh.keys():
+  for key in list(abh.keys()):
     if len(key)==1: traverse = [ key ] + traverse;
     else: traverse.append(key);
   traverse = shuffle(traverse,scramble)
@@ -181,44 +181,44 @@ def mincoverage(abh,scramble=0,hints={}):
     for r in newre_list:
       precond.remove(r);
       if r in closure(precond,redabh):   # precond already contains the right sides of the other rules
-	newre.remove(r);                 # this is the same as closure( li, redabh + {li->each other right side} )
+        newre.remove(r);                 # this is the same as closure( li, redabh + {li->each other right side} )
       else:
-	precond.add(r);
+        precond.add(r);
 
     if len(newre) == 0:
       abh = redabh; 
 
     else:
-      installed_newre = False;
+      installed_newre = False
       if len(li) > 1:
-	# minimize the left side: see if the rest can be inferenced out of a part of the left side
-	# left side will never fall short as a whole
-	# you may believe that there is a possible flaw in the following implementation:
-	# it tries to reduce the left side for the whole rule bundle only
-	# however if the start set misses one precondition of the other rules those rules could never fire (unless this precondition got inferenced)
-	# i.e. if they can never fire the other rules of the rule bundle do not need to be considered  (however if it gets inferenced then leaving it out will already be ok)
-	lired = liset;
-	for l in li:
-	  tryred = lired.copy(); tryred.remove(l);
-	  cls = closure(tryred,redabh)
-	  if li <= cls:
-	    lired = tryred;
-	
-	# now if the left side has been successfully reduced make these changes persistent
-	if lired != li:
-	  abh = redabh; lired = frozenset(lired);  # left sides need to be unchangeable frozensets in order to serve as dictionary keys
-	  if lired in abh:
-	    # if there do already exist rules which have a left side being the same as our new reduced left side add the new rules here
-	    abh[lired] = abh[lired].union(newre);
-	  else:
-	    # otherwise add as new rule bundle
-	    abh[lired] = newre;
-	  installed_newre = True;
+        # minimize the left side: see if the rest can be inferenced out of a part of the left side
+        # left side will never fall short as a whole
+        # you may believe that there is a possible flaw in the following implementation:
+        # it tries to reduce the left side for the whole rule bundle only
+        # however if the start set misses one precondition of the other rules those rules could never fire (unless this precondition got inferenced)
+        # i.e. if they can never fire the other rules of the rule bundle do not need to be considered  (however if it gets inferenced then leaving it out will already be ok)
+        lired = liset
+        for l in li:
+          tryred = lired.copy(); tryred.remove(l)
+          cls = closure(tryred,redabh)
+          if li <= cls:
+            lired = tryred;
+        
+        # now if the left side has been successfully reduced make these changes persistent
+        if lired != li:
+          abh = redabh; lired = frozenset(lired);  # left sides need to be unchangeable frozensets in order to serve as dictionary keys
+          if lired in abh:
+            # if there do already exist rules which have a left side being the same as our new reduced left side add the new rules here
+            abh[lired] = abh[lired].union(newre);
+          else:
+            # otherwise add as new rule bundle
+            abh[lired] = newre;
+          installed_newre = True;
 
       if not installed_newre:
-	# install the reduced right side if the left side has stayed the same
-	abh = redabh;
-	abh[li] = newre;
+        # install the reduced right side if the left side has stayed the same
+        abh = redabh;
+        abh[li] = newre;
 
   return abh;
 
@@ -229,11 +229,11 @@ def keyBaseSets(attr,abh):
   #  2.) attrs found on the right side only 
   #  3.) attributes found on both sides of a rule
   attrch = dict( [ (a,0) for a in attr ] )
-  for (li,re) in abh.items():
+  for (li,re) in list(abh.items()):
     for l in li: attrch[l] = attrch[l] | 1;
     for r in re: attrch[r] = attrch[r] | 2;
   sets = ( set(), set(), set(), set() )
-  for (a,ch) in attrch.items():
+  for (a,ch) in list(attrch.items()):
     sets[ch].add(a);
   return sets;
 
@@ -270,28 +270,28 @@ def keysTreeAlg( attr, abh, verbty=None ):
     # at the entrance of this loop curlevel contains all key candidates with len(subkey) + lvl attributes
     prevlvl = curlvl; curlvl = dict(); lvl+=1; lpad+=' ';
 
-    for subkey, maxm in prevlvl.items():
+    for subkey, maxm in list(prevlvl.items()):
       # pick one of the not yet selected attributes that is listed alphabetically after the alphabetically highest attribute that already is part of the set
       # this ensures that the same attribute configuration is only considered once in ascending order of the individual attributes
       missingattr = set();
       for a in mi: 
-	if a > maxm and a not in subkey: missingattr.add(a);
+        if a > maxm and a not in subkey: missingattr.add(a);
 
       for m in missingattr:
-	newattr = subkey.union(frozenset(m));   # do pick the attribute
-	ispartofkey = False;
-	for key in keys:
-	  if key <= newattr:
-	    ispartofkey = True;
-	    break;
-	if not ispartofkey:
-	  if closure(newattr,abh) == attr:
-	    keys.add(newattr);
-	    for p in newattr: primattr.add(p);
-	  else: # if neither a new key was found nor has the new attribute configuration been a superset of an existing key 
-	        # then remember this configuration and add one more attribute in the next step
-	    curlvl[newattr] = max(maxm,m);
-	
+        newattr = subkey.union(frozenset(m));   # do pick the attribute
+        ispartofkey = False;
+        for key in keys:
+          if key <= newattr:
+            ispartofkey = True;
+            break;
+        if not ispartofkey:
+          if closure(newattr,abh) == attr:
+            keys.add(newattr);
+            for p in newattr: primattr.add(p);
+          else: # if neither a new key was found nor has the new attribute configuration been a superset of an existing key 
+                # then remember this configuration and add one more attribute in the next step
+            curlvl[newattr] = max(maxm,m);
+  
   return (primattr,keys);
 
 

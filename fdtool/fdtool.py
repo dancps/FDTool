@@ -24,9 +24,9 @@ __version__="0.1.7"
 
 import pandas as pd
 import sys, time, argparse, ntpath, pickle, csv
-from modules import *
+from .modules import *
 from string import ascii_lowercase
-from config import MAX_K_LEVEL
+from .config import MAX_K_LEVEL
 
 def fdtool(input_file, output_file=None, suppress_save=False, verbose = True, debug = False):
 
@@ -36,7 +36,7 @@ def fdtool(input_file, output_file=None, suppress_save=False, verbose = True, de
     filePath = input_file
 
     # Print reading file
-    if verbose: print "\n" + "Reading file: \n" + str(filePath) + "\n"; sys.stdout.flush();
+    if verbose: print("\n" + "Reading file: \n" + str(filePath) + "\n"); sys.stdout.flush();
     # Define file extension from path
     fileExtension = ntpath.basename(filePath).split('.')[-1]
 
@@ -47,7 +47,7 @@ def fdtool(input_file, output_file=None, suppress_save=False, verbose = True, de
             # Detect delimiter
             sniffer = csv.Sniffer()
             sniffer.preferred=[',','|',';',':','~']            
-            csvFile=open(filePath, 'rb')
+            csvFile=open(filePath, 'rt')
             for row in csv.reader(csvFile,delimiter="\t"):
                 row1=row
                 break;
@@ -56,18 +56,18 @@ def fdtool(input_file, output_file=None, suppress_save=False, verbose = True, de
             sepType = dialect.delimiter
 
             if sepType not in {",", "|", ";", ":", "~"}:
-                if verbose: print "Invalid delimiter"
+                if verbose: print("Invalid delimiter")
                 sys.stdout.flush()
                 return;
 
             # Read in pandas data frame from csv file
             df = pd.read_csv(filePath, sep = sepType);
-        except pd.parser.CParserError:
-            print "Invalid file"
+        except pd.errors.ParserWarning: # TODO: Check if this is the best exception
+            print("Invalid file")
             sys.stdout.flush()
             return;
         except IOError:
-            print "File not found"
+            print("File not found")
             sys.stdout.flush()
             return;
     else:
@@ -75,7 +75,7 @@ def fdtool(input_file, output_file=None, suppress_save=False, verbose = True, de
             # Read in pandas data fram pkl file
             df = pd.read_pickle(filePath);
         except IOError:
-            print "File not found"
+            print("File not found")
             sys.stdout.flush()
             return;
 
@@ -99,7 +99,7 @@ def fdtool(input_file, output_file=None, suppress_save=False, verbose = True, de
         # Create dictionary to convert column names into alphabetical characters
         Alpha_Dict = {U[i]: ascii_lowercase.upper()[i] for i in range(len(U))}
     except IndexError:
-        if verbose: print "Table exceeds max column count"
+        if verbose: print("Table exceeds max column count")
         sys.stdout.flush()
         return;
     
@@ -155,9 +155,9 @@ def fdtool(input_file, output_file=None, suppress_save=False, verbose = True, de
             # Print FD String
             if verbose: print(String); sys.stdout.flush();
             if debug:
-                print ' FD = ',FunctionalDependency,type(FunctionalDependency)
-                print '  FD[0] = ',FunctionalDependency[0],type(FunctionalDependency[0])
-                print '  FD[1] = ',FunctionalDependency[1],type(FunctionalDependency[1])
+                print(' FD = ',FunctionalDependency,type(FunctionalDependency))
+                print('  FD[0] = ',FunctionalDependency[0],type(FunctionalDependency[0]))
+                print('  FD[1] = ',FunctionalDependency[1],type(FunctionalDependency[1]))
             # Write string to TXT file
             if(not(suppress_save)): file.write(String + "\n")
         
@@ -168,7 +168,7 @@ def fdtool(input_file, output_file=None, suppress_save=False, verbose = True, de
 
     # Print equivalences
     if(not(suppress_save)): file.write("\n" + "Equivalences: " + "\n")
-    if verbose: print "\n" + "Equivalences: "; sys.stdout.flush();
+    if verbose: print("\n" + "Equivalences: "); sys.stdout.flush();
     # Iterate through equivalences returned
     for Equivalence in E_Set:
         # Create string for functional dependency
@@ -180,7 +180,7 @@ def fdtool(input_file, output_file=None, suppress_save=False, verbose = True, de
 
     # Print out keys 
     if(not(suppress_save)): file.write("\n" + "Keys: " + "\n")
-    if verbose: print "\n" + "Keys: "; sys.stdout.flush();
+    if verbose: print("\n" + "Keys: "); sys.stdout.flush();
     # Get string of column names sorted to alphabetical characters
     SortedAlphaString = "".join(sorted([Alpha_Dict[item] for item in Alpha_Dict]))
     # Run required inputs through keyList module to determine keys with
@@ -190,7 +190,7 @@ def fdtool(input_file, output_file=None, suppress_save=False, verbose = True, de
         # Write keys to file
         if(not(suppress_save)): file.write(str(key) + "\n")
         # Print keys
-        if verbose: print str(key); sys.stdout.flush();
+        if verbose: print(str(key)); sys.stdout.flush();
     
     # Create string to give user info of script
     checkInfoString = str("\n" + "Time (s): " + str(round(time.time() - start_time, 4)) + "\n"

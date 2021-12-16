@@ -1,4 +1,4 @@
-import binaryRepr
+from . import binaryRepr
 
 # Create decorator function to see how many times functions are called
 def call_counter(func):
@@ -51,7 +51,7 @@ def f(C_km1, df, Closure, U, Cardinality):
     if len(C_km1[0]) == 1: SubsetsToCheck += C_km1;
     
     # Iterate through subsets mapped to the Cardinality of Partition function
-    for Cand, Card in zip(SubsetsToCheck, map(CardOfPartition, SubsetsToCheck, [df]*len(SubsetsToCheck))):
+    for Cand, Card in zip(SubsetsToCheck, list(map(CardOfPartition, SubsetsToCheck, [df]*len(SubsetsToCheck)))):
         # Add Cardinality of Partition to dictionary
         Cardinality[binaryRepr.toBin(Cand, U)] = Card;
 
